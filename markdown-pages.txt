@@ -1,3 +1,0 @@
-This line is the footer text/html. Place anything you want here...
-First Page = https://raw.githubusercontent.com/Alan-FGR/JustTheMD/master/SamplePage1.md
-Second Page = https://raw.githubusercontent.com/Alan-FGR/JustTheMD/master/SamplePage2.md
