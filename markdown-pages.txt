@@ -1,0 +1,2 @@
+First Page = https://raw.githubusercontent.com/Alan-FGR/JustTheMD/master/SamplePage1.md
+Second Page = https://raw.githubusercontent.com/Alan-FGR/JustTheMD/master/SamplePage2.md
