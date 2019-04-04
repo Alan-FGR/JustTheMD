@@ -2,39 +2,25 @@ body {
     margin: 0;
     background-color: #fff;
     color: #24292e;
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
     font-size: 14px;
     line-height: 1.5;
 }
 
-.emoji {
-    width: 1.5em;
-    height: 1.5em;
-    display: inline-block;
-    margin-bottom: -0.25em;
-    background-size: contain;
-}
-
-nav>ul {
+nav > ul {
     display: flex;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-nav>ul>li {
+nav > ul > li {
     padding: 12px;
 }
 
 nav a {
     color: white;
     text-decoration: none;
-}
-
-nav>ul>li:nth-child(1) {
-    font-size: 20px;
-    padding-top: 8px;
-    font-weight: bold;
 }
 
 nav a :hover {
@@ -82,31 +68,6 @@ nav a :hover {
 .octicon-link {
     fill: currentColor;
     color: #000;
-}
-
-header {
-    background-color: #000;
-    color: #fff;
-    font-size: 16px;
-}
-
-header>div {
-    margin: 0 auto 32px auto;
-    display: flex;
-    max-width: 980px;
-    padding: 4px;
-}
-
-footer {
-    border-top: 1px solid #d1d5da;
-    margin-top: 32px;
-}
-
-footer>div {
-    margin: 12px auto;
-    max-width: 940px;
-    padding: 8px;
-    text-align: right;
 }
 
 @media (max-width: 767px) {

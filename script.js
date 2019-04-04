@@ -29,9 +29,10 @@ function slugify(text) {
     {to: '-', from: '[·/_,:;\']'}
     ];
 
-    sets.forEach(set => {
-    text = text.replace(new RegExp(set.from,'gi'), set.to)
-    });
+    for (var i = 0; i < sets.length; i++) {
+        const set = sets[i];
+        text = text.replace(new RegExp(set.from, 'gi'), set.to)
+    }
 
     return text.toString().toLowerCase()
     .replace(/\s+/g, '-')    
@@ -60,6 +61,45 @@ function isUrl(url) {
     return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
 }
 
+function locationObjFromUrl(url) {
+    var loc = document.createElement('a');
+    loc.href = url;
+    loc.pathname = loc.pathname.replace(/(^\/?)/,"/"); //bugfix
+    return loc;
+    // REFERENCE:
+    // url.protocol; //(http:)
+    // url.hostname; //(www.example.com)
+    // url.pathname; //(/some/path)
+    // url.search; // (?name=value)
+    // url.hash; //(#anchor)
+}
+
+function splitAndRetValid(str){
+    var split = str.split("/");
+    if (!split[0]) split = split.slice(1);
+    return split;
+}
+
+function userAndRepoFromUrl(url) {
+    var loc = locationObjFromUrl(url);
+    if (loc.hostname.split(".").indexOf("io") !== -1)
+        return [loc.hostname.split(".")[0], splitAndRetValid(loc.pathname)[0]];
+    else {
+        var split = splitAndRetValid(loc.pathname);
+        return split.slice(0,2);
+    }
+}
+
+function rawifyResource(resource){
+    var loc = locationObjFromUrl(resource);
+    if (loc.hostname.split(".").indexOf("github") !== -1){
+        var resRel = shortenRelUrl(loc.pathname);
+        var userRepo = userAndRepoFromUrl(resource);
+        return formatRawSourceUrl(resRel, userRepo[0], userRepo[1]);
+    }
+    return resource;
+}
+
 function shortenRelUrl(url){
     var split = url.split("/");
     if (!split[0]) split = split.slice(1);
@@ -72,17 +112,27 @@ function shortenRelUrl(url){
 }
 
 function formatLink(page){
-    var baseUrl = "https://"+username+".github.io/"+repoName+"/";
-    if (!page) return baseUrl;
+    // var baseUrl = "https://"+username+".github.io/"+repoName+"/";
+    //var baseUrl = ""+repoName+"/";
+    var baseUrl = "";
+    if (!page) return "/"+repoName;
     // var slugified = slugify(page);
     // return baseUrl+"?"+slugified;
     return baseUrl+"?"+page;
 }
 
-function formatSourceUrl(page){
+function formatRepoUrl(page){
     var base = "https://github.com/"+username+"/"+repoName;
     if (!page) return base+"/";
     return base+"/blob/master/"+page;
+}
+
+function formatRawSourceUrl(resource, username_, repoName_){
+    if (!username_) username_ = username;
+    if (!repoName_) repoName_ = repoName;
+    if (resource == null) return formatRawSourceUrl("README.md");
+    if (isUrl(resource)) return rawifyResource(resource);
+    return "https://raw.githubusercontent.com/"+username_+"/"+repoName_+"/master/"+resource;
 }
 
 function getPageFromUrl() {
@@ -104,22 +154,28 @@ var sourceUrl;
 var defaultPage;
 function parseInfo() {
     log("Parsing information from URL")
-    username = location.hostname.split(".")[0];
-    var repoRegex = /github\.io\/(.*?)\//;
-    repoName = repoRegex.exec($(location).attr('href'))[1];
+    // username = location.hostname.split(".")[0];
+    // var repoRegex = /github\.io\/(.*?)\//;
+    // repoName = repoRegex.exec($(location).attr('href'))[1];
+
+    var userAndRepo = userAndRepoFromUrl($(location).attr('href'));
+    username = userAndRepo[0];
+    repoName = userAndRepo[1];
+
     pageToLoad = getPageFromUrl();
     if (HasConfig()) {
-        defaultPage = JustTheMD_Pages[Object.keys(JustTheMD_Pages)[0]];
+        defaultPage = Object.keys(JustTheMD_Pages)[0];
         for (var page in JustTheMD_Pages) { 
             if (slugify(page) == pageToLoad) {
                 pageToLoad = JustTheMD_Pages[page];
                 break;
             }
         }
+        if (!pageToLoad) pageToLoad = JustTheMD_Pages[defaultPage];
     }
-    if (!pageToLoad) pageToLoad = defaultPage;
-    sourceUrl = isUrl(pageToLoad) ? pageToLoad : formatSourceUrl(pageToLoad);
-    log("Parsed username: "+username+", repository: "+repoName+" page: "+pageToLoad+" source: "+sourceUrl);
+    sourceUrl = formatRawSourceUrl(pageToLoad);
+    log("Parsed username: "+username+", <br/>repository: "+repoName+
+    " <br/>page: "+pageToLoad+" <br/>source: "+sourceUrl);
 }
 
 function genNavLinks() {
@@ -138,30 +194,97 @@ function loadPage(){
 
     log("Loading data from: "+sourceUrl)
     $.get(sourceUrl)
-    .done(function (gh_page){
+    .done(function (md){
     
-        var md_html = $(gh_page).find(".markdown-body")[0].outerHTML;
-        $(".loading-info").hide();
-        $("#markdown").empty();
-        $("#markdown").append(md_html);
-    
-        $(".anchor").each(function (){
-            var id = $(this).attr('id');
-            $(this).attr("id", id.replace("user-content-", ""));
+        log("Data loaded. Converting markdown");
+        var converter = new showdown.Converter({
+                tables: true,
+                strikethrough: true,
+                noHeaderId: true,
+                simplifiedAutoLink: true,
+                excludeTrailingPunctuationFromURLs: true,
+                tablesHeaderId: true,
+                ghCodeBlocks: true,
+                tasklists: true,
+                ghMentions: true,
+                parseImgDimensions: true
+            });
+        var md_html = converter.makeHtml(md);
+
+        $(".loading-info").slideUp();
+
+        $("#markdown").append(`<article class="markdown-body"></article>`);
+        $("#markdown > article").append(md_html);
+
+        if (typeof emojify != 'undefined') {
+            emojify.setConfig({
+                img_dir: 'https://github.githubassets.com/images/icons/emoji',
+                ignore_emoticons: true
+            })
+            emojify.run($("#markdown > article")[0]);
+        }
+
+        if (typeof hljs != 'undefined'){
+            $("#markdown pre code").each(function(){hljs.highlightBlock($(this)[0])});
+        }
+
+        $(":header").prepend(function (){
+            var id = slugify($(this).text());
+            //if (id in TocAnchorMap) id = TocAnchorMap[id];
+            return `
+            <a class="anchor" id="`+ id +`" href="#`+ id +`" aria-hidden="true">
+            <svg class="octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+            <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z">
+            </path>
+            </svg>
+            </a>
+            `;
         });
     
-        $("a").each(function() {
+        // $("#markdown .anchor").each(function (){
+        //     var id = $(this).attr('id');
+        //     $(this).attr("id", id.replace("user-content-", ""));
+        // });
+    
+        $("#markdown a").each(function() {
             var link = $(this).attr('href');
             if (link){
                 var isMd = link.slice(-3) == ".md";
                 var isRel = !isUrl(link);
-                if (isMd && isRel){
-                    var page = shortenRelUrl(link);
-                    var newLink = formatLink(page);
-                    $(this).attr('href', newLink);
+                var isAnc = (link)[0] == "#";
+                if (isMd && isRel && !isAnc) {
+                    for (var page in JustTheMD_Pages) {
+                        if (JustTheMD_Pages[page] == link) {
+                            link = slugify(page);
+                            break;
+                        }
+                    }
+                    $(this).attr('href', '?' + link);
                 }
-                else if ((link)[0] == "#"){
+                else if (isMd && !isAnc && !isRel){
+                    //$(this).attr('href', '?' + link);
+                }
+                else if (!isMd && !isAnc && isRel){
+                    $(this).attr('href', formatRepoUrl(link));
+                }
+                else if (!isMd && isRel && !isAnc && (link)[0] == "/"){
+                    // var rawLink = formatRawSourceUrl(link);
+                    // $(this).attr('href', rawLink);
+                }
+                else if (false){
                     //tocMap[] TODO: TOC map support (old version supports, but GitHub doesn't, so maybe unecessary)
+                }
+            }
+        });
+
+        $("#markdown img").each(function() {
+            var src = $(this).attr('src');
+            if (src){
+                var isRel = !isUrl(src);
+                var isLoc = (src)[0] == "/";
+                if (isRel){
+                    var rawLink = formatRawSourceUrl(src);
+                    $(this).attr('src', rawLink);
                 }
             }
         });
@@ -172,7 +295,7 @@ function loadPage(){
 }
 
 
-// Working vars
+// 
 
 var isBodyEmpty = true;
 $("body").children().each(function (index, element) {
@@ -201,7 +324,7 @@ if (isBodyEmpty) {
         if (typeof JustTheMD_Footer != 'undefined')
             footer = JustTheMD_Footer+"<br/>"+footer;
         $("#footnote").html(footer);
-        $("#repo-link").attr("href", formatSourceUrl());
+        $("#repo-link").attr("href", formatRepoUrl());
         loadPage();
     })
     .fail(function() {log("ERROR: Couldn't load default template")});

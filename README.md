@@ -19,7 +19,7 @@ What's even better is that installing JustTheMD consists of adding a single html
 
 ## Advanced Features
 
-Sometimes you need to display more than just the README.md... or maybe you don't want to display it at all and want some different markdown file for your landing page. JustTheMD allows you to configure that. By simply declaring some variables in the JustTheMD html file in your repository you can configure the footer of the generated pages, and also the pages to be used in the top navigation bar. You can have as many pages as you want, both local and remote (useful if you want to link markdowns of your dependencies). URLs for configured pages are prettified so you can have short and shareable links. Also, as opposed to other solutions there are contextual anchor links and they work just as in GitHub, so sharing links to the relevant content is literally one click away!
+Sometimes you need to display more than just the README.md... or maybe you don't want to display it at all and want some different markdown file for your landing page. JustTheMD allows you to configure that. By simply declaring some variables in the JustTheMD html file in your repository you can configure the footer of the generated pages, and also the pages to be used in the top navigation bar. You can have as many pages as you want, both local and remote (useful if you want to link markdowns of your dependencies). URLs for configured pages are prettified so you can have short and sharable links. Also, as opposed to other solutions there are contextual anchor links and they work just as in GitHub, so sharing links to the relevant content is literally one click away!
 
 # Setting up
 
@@ -32,7 +32,7 @@ JustTheMD is basically a browser application that you install/copy to any GitHub
 If you don't already have a gh-pages branch, the setup is very simple, you can have JustTheMD working for your repository simply by opening a command line in the directory of the repository where you want to install JustTheMD and running these commands (on Windows run from the git bash):
 ``` sh
 git checkout --orphan gh-pages
-git rm -rf .
+rm -rf *
 curl https://alan-fgr.github.io/JustTheMD/index.html > index.html
 git add .
 git commit -m "added JustTheMD"
@@ -40,7 +40,7 @@ git push --set-upstream origin gh-pages
 ``` 
 or you can even run all of that in one-shot:
 ```
-git checkout --orphan gh-pages && git rm -rf . && curl https://alan-fgr.github.io/JustTheMD/index.html > index.html && git add . && git commit -m "added JustTheMD" && git push --set-upstream origin gh-pages
+git checkout --orphan gh-pages && rm -rf * && curl https://alan-fgr.github.io/JustTheMD/index.html > index.html && git add . && git commit -m "added JustTheMD" && git push --set-upstream origin gh-pages
 ```
 and that's it! You can now access the URL of the GH Pages (https://YOURUSERNAME.github.io/REPOSITORY/) and the README.md will be presented there in gloriously consistent markdown, exactly as it's displayed in your repository but without all the clutter.   
 
@@ -102,6 +102,7 @@ There are a couple of sample repositories in case you want to check how to confi
 This is a repository in which JustTheMD was installed in the gh-pages branch. It uses the default index.html file, so no configurations were changed. JustTheMD will load the README.md file.
 
 [Link to the Repository](https://github.com/Alan-FGR/JustTheMD-Sample)
+
 [Link to the JustTheMD Page](https://alan-fgr.github.io/JustTheMD-Sample/)
 
 ## Advanced configuration with custom footer and external Markdown file
@@ -109,6 +110,7 @@ This is a repository in which JustTheMD was installed in the gh-pages branch. It
 This is a repository with custom JustTheMD configuration in which JustTheMD was installed in the master branch. Open the index.html in the repository link to see the configurations.
 
 [Link to the Repository](https://github.com/Alan-FGR/JustTheMD-Sample-Advanced)
+
 [Link to the JustTheMD Page](https://alan-fgr.github.io/JustTheMD-Sample-Advanced/)
 
 # Showcase
@@ -121,7 +123,7 @@ More coming soon...
 
 ## Browser Compatibility
 
-JustTheMD will run fine in any reasonaly standards compliant and updated browser.
+JustTheMD will run fine in any reasonably standards-compliant and updated browser.
 
 ## Issues and Contributions
 
