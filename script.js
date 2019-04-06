@@ -279,6 +279,9 @@ function loadPage(){
         });
     
         if (location.hash) location.href = location.hash;
+
+        document.title = HasConfig() ? defaultPage : repoName;
+
     })
     .fail(function(){log("ERROR: Couldn't load page: "+sourceUrl)});
 }
