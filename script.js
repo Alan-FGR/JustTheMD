@@ -60,7 +60,7 @@ function isUrl(url) {
 function locationObjFromUrl(url) {
     var loc = document.createElement('a');
     loc.href = url;
-    loc.pathname = loc.pathname.replace(/(^\/?)/,"/"); //bugfix
+    loc.pathname = loc.pathname.replace(/(^\/?)/, "/"); //bugfix
     return loc;
     // REFERENCE:
     // url.protocol; //(http:)
@@ -78,6 +78,13 @@ function splitAndRetValid(str){
 
 function userAndRepoFromUrl(url) {
     var loc = locationObjFromUrl(url);
+
+    // Hack to add custom domain support. TODO: make configurable
+    if (isCustomUrl) {
+        var split = loc.pathname.split("/");
+        return ["alan-fgr", split[1]];
+    }
+
     if (loc.hostname.split(".").indexOf("io") !== -1)
         return [loc.hostname.split(".")[0], splitAndRetValid(loc.pathname)[0]];
     else {
@@ -110,6 +117,10 @@ function shortenRelUrl(url){
 function formatLink(page){
     // var baseUrl = "https://"+username+".github.io/"+repoName+"/";
     //var baseUrl = ""+repoName+"/";
+
+    if (isCustomUrl && page == repoName)
+        return "/" + repoName;
+
     var baseUrl = "";
     if (!page) return "/"+repoName;
     // var slugified = slugify(page);
@@ -143,6 +154,7 @@ function HasConfig(){
     return (typeof JustTheMD_Pages != 'undefined');
 }
 
+var isCustomUrl;
 var username;
 var repoName;
 var pageToLoad;
@@ -154,7 +166,11 @@ function parseInfo() {
     // var repoRegex = /github\.io\/(.*?)\//;
     // repoName = repoRegex.exec($(location).attr('href'))[1];
 
-    var userAndRepo = userAndRepoFromUrl($(location).attr('href'));
+    var url = $(location).attr('href');
+
+    isCustomUrl = url.indexOf("github.io/") === -1;
+
+    var userAndRepo = userAndRepoFromUrl(url);
     username = userAndRepo[0];
     repoName = userAndRepo[1];
 
@@ -180,7 +196,12 @@ function genNavLinks() {
     else
         for (var page in JustTheMD_Pages) {
             var src = slugify(page);
-            if (src == slugify(defaultPage)) src = null;
+            if (src == slugify(defaultPage)) {
+                if (isCustomUrl)
+                    src = repoName;
+                else
+                    src = null;
+            }
             $("#pages-nav-list").append('<li><a href="'+formatLink(src)+'"><span>'+page+'</span></a></li>');
         }
 }
