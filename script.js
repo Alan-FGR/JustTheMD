@@ -76,11 +76,11 @@ function splitAndRetValid(str){
     return split;
 }
 
-function userAndRepoFromUrl(url) {
+function userAndRepoFromUrl(url, skipCustom) {
     var loc = locationObjFromUrl(url);
 
     // Hack to add custom domain support. TODO: make configurable
-    if (isCustomUrl) {
+    if (!skipCustom && isCustomUrl) {
         var split = loc.pathname.split("/");
         return ["alan-fgr", split[1]];
     }
@@ -97,7 +97,7 @@ function rawifyResource(resource){
     var loc = locationObjFromUrl(resource);
     if (loc.hostname.split(".").indexOf("github") !== -1){
         var resRel = shortenRelUrl(loc.pathname);
-        var userRepo = userAndRepoFromUrl(resource);
+        var userRepo = userAndRepoFromUrl(resource, true);
         return formatRawSourceUrl(resRel, userRepo[0], userRepo[1]);
     }
     return resource;
@@ -170,7 +170,7 @@ function parseInfo() {
 
     isCustomUrl = url.indexOf("github.io/") === -1;
 
-    var userAndRepo = userAndRepoFromUrl(url);
+    var userAndRepo = userAndRepoFromUrl(url, false);
     username = userAndRepo[0];
     repoName = userAndRepo[1];
 
